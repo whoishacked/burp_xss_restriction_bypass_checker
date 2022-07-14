@@ -2,7 +2,7 @@
 ## Description
 Extension for Portswiger Burp Suite which check and bypass XSS filters.
 
-## Install
+## Installation
 Clone the repository:
 ```
 git clone whoishacked/burp_xss_filter_bypass_module
