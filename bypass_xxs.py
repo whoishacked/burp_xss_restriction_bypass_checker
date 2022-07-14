@@ -46,56 +46,57 @@ class BurpExtender(IBurpExtender, IHttpListener, IContextMenuFactory):
         for payload in menuItem:
             if payload.startswith('[POST]'):
                 menu = JMenuItem(payload, None,
-                                 actionPerformed=lambda x: self.postRequest(
+                                 actionPerformed=lambda x: self.postRequestModify(
                                      x))
                 self.mainMenu.add(menu)
             elif payload.startswith('[GET]'):
                 menu = JMenuItem(payload, None,
-                                 actionPerformed=lambda x: self.getRequest(x))
+                                 actionPerformed=lambda x: self.getRequestModify(x))
                 self.mainMenu.add(menu)
         return self.menus if self.menus else None
 
-    def postRequest(self, x):
-        # print 'invocaton:',self.invocation.getSelectedMessages
-        self.payload = x.getSource().text.split(':')[-1]
-        currentRequest = self.invocation.getSelectedMessages()[0]
-        requestInfo = self._helpers.analyzeRequest(currentRequest)
-        self.headers = list(requestInfo.getHeaders())
-        # print 'self.headers',self.headers
-        bodyBytes = currentRequest.getRequest()[
-                    requestInfo.getBodyOffset():]
-        self.body = self._helpers.bytesToString(bodyBytes)
-        print(self.body)
-        o, n = self.update_body(urllib.unquote(self.body))
-        self.body = self.body.replace(o, n)
-        newMessage = self._helpers.buildHttpMessage(self.headers,
-                                                    self.body)
-        currentRequest.setRequest(newMessage)
+    def postRequestModify(self, x):
+        if x.getSource().text.startswith('[POST]'):
+            # print 'invocaton:',self.invocation.getSelectedMessages
+            self.payload = x.getSource().text.split(':')[-1]
+            currentRequest = self.invocation.getSelectedMessages()[0]
+            requestInfo = self._helpers.analyzeRequest(currentRequest)
+            self.headers = list(requestInfo.getHeaders())
+            # print 'self.headers',self.headers
+            bodyBytes = currentRequest.getRequest()[
+                        requestInfo.getBodyOffset():]
+            self.body = self._helpers.bytesToString(bodyBytes)
+            # print 'self.body:',self.body
+            o, n = self.update_body(urllib.unquote(self.body))
+            self.body = self.body.replace(o, n)
+            newMessage = self._helpers.buildHttpMessage(self.headers,
+                                                        self.body)
+            currentRequest.setRequest(newMessage)
 
-    def getRequest(self, x):
-        self.payload = x.getSource().text.split(':')[-1]
-        currentRequest = self.invocation.getSelectedMessages()[
-            0]  # return IHttpRequestResponse
-        body = currentRequest.getRequest()  # return byte[]
-        requestInfo = self._helpers.analyzeRequest(
-            currentRequest)  # returns IResponseInfo
-        paraList = requestInfo.getParameters()  # array
-        # print 'paraList',paraList
-        new_requestInfo = body
-        white_action = ['action', 'sign']
-        for para in paraList:
-            if para.getType() == 0 and not self.Filter(white_action,
-                                                       para.getName()):
-                value = para.getValue() + self.payload
-                key = para.getName()
-                newPara = self._helpers.buildParameter(key, value,
-                                                       para.getType())
-                new_requestInfo = self._helpers.updateParameter(
-                    new_requestInfo,
-                    newPara
-                )
+    def getRequestModify(self, x):
+        if x.getSource().text.startswith('[GET]'):
+            self.payload = x.getSource().text.split(':')[-1]
+            currentRequest = self.invocation.getSelectedMessages()[
+                0]  # return IHttpRequestResponse
+            body = currentRequest.getRequest()  # return byte[]
+            requestInfo = self._helpers.analyzeRequest(
+                currentRequest)  # returns IResponseInfo
+            paraList = requestInfo.getParameters()  # array
+            # print 'paraList',paraList
+            new_requestInfo = body
+            white_action = ['action', 'sign']
+            for para in paraList:
+                if para.getType() == 0 and not self.Filter(white_action,
+                                                           para.getName()):
+                    value = para.getValue() + self.payload
+                    key = para.getName()
+                    newPara = self._helpers.buildParameter(key, value,
+                                                           para.getType())
+                    new_requestInfo = self._helpers.updateParameter(
+                        new_requestInfo,
+                        newPara)  # updateParameter(byte[],IParameter) return byte[]
 
-        currentRequest.setRequest(new_requestInfo)
+            currentRequest.setRequest(new_requestInfo)
 
     def Filter(self, white_action, key):
         return True if ([True for i in white_action if
