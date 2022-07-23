@@ -20,6 +20,11 @@ import hashlib
 import urllib
 import json
 
+try:
+  from exceptions_fix import FixBurpExceptions
+except ImportError:
+  pass
+
 
 class BurpExtender(IBurpExtender, IHttpListener, IContextMenuFactory):
 
@@ -35,49 +40,29 @@ class BurpExtender(IBurpExtender, IHttpListener, IContextMenuFactory):
         self.mainMenu = JMenu("XSS Filter Bypass")
         self.menus.append(self.mainMenu)
         self.invocation = invocation
+
         menuItem = [
-            '[POST]:<script>alert(1)</script>',
-            '[POST]:<img src=x onerror=alert(1) />',
-            '[POST]:<svg onload=alert(\'XSS\')>',
-            '[GET]:<script>alert(1)</script>',
-            '[GET]:<img src=x onerror=alert(1) />',
-            '[GET]:<svg onload=alert(\'XSS\')>'
+            '<script>alert(1)</script>',
+            '<img src=x onerror=alert(1) />',
+            '<svg onload=alert(\'XSS\')>',
+            '<script>alert(1)</script>',
+            '<img src=x onerror=alert(1) />',
+            '<svg onload=alert(\'XSS\')>'
         ]
         for payload in menuItem:
-            if payload.startswith('[POST]'):
-                menu = JMenuItem(payload, None,
-                                 actionPerformed=lambda x: self.postRequestModify(
-                                     x))
-                self.mainMenu.add(menu)
-            elif payload.startswith('[GET]'):
-                menu = JMenuItem(payload, None,
-                                 actionPerformed=lambda x: self.getRequestModify(x))
-                self.mainMenu.add(menu)
+            menu = JMenuItem(payload, None,
+                             actionPerformed=lambda
+                                 x: self.requestModify(
+                                 x))
+            self.mainMenu.add(menu)
         return self.menus if self.menus else None
 
-    def postRequestModify(self, x):
-        if x.getSource().text.startswith('[POST]'):
-            # print 'invocaton:',self.invocation.getSelectedMessages
-            self.payload = x.getSource().text.split(':')[-1]
-            currentRequest = self.invocation.getSelectedMessages()[0]
-            requestInfo = self._helpers.analyzeRequest(currentRequest)
-            self.headers = list(requestInfo.getHeaders())
-            # print 'self.headers',self.headers
-            bodyBytes = currentRequest.getRequest()[
-                        requestInfo.getBodyOffset():]
-            self.body = self._helpers.bytesToString(bodyBytes)
-            # print 'self.body:',self.body
-            o, n = self.update_body(urllib.unquote(self.body))
-            self.body = self.body.replace(o, n)
-            newMessage = self._helpers.buildHttpMessage(self.headers,
-                                                        self.body)
-            currentRequest.setRequest(newMessage)
-
-    def getRequestModify(self, x):
-        if x.getSource().text.startswith('[GET]'):
-            self.payload = x.getSource().text.split(':')[-1]
-            currentRequest = self.invocation.getSelectedMessages()[
-                0]  # return IHttpRequestResponse
+    def requestModify(self, x):
+        self.payload = x.getSource().text
+        currentRequest = self.invocation.getSelectedMessages()[0]
+        requestInfo = self._helpers.analyzeRequest(currentRequest)
+        self.headers = list(requestInfo.getHeaders())
+        if (requestInfo.getMethod() == "GET"):
             body = currentRequest.getRequest()  # return byte[]
             requestInfo = self._helpers.analyzeRequest(
                 currentRequest)  # returns IResponseInfo
@@ -97,6 +82,17 @@ class BurpExtender(IBurpExtender, IHttpListener, IContextMenuFactory):
                         newPara)  # updateParameter(byte[],IParameter) return byte[]
 
             currentRequest.setRequest(new_requestInfo)
+
+        elif (requestInfo.getMethod() == "POST"):
+            bodyBytes = currentRequest.getRequest()[
+                        requestInfo.getBodyOffset():]
+            self.body = self._helpers.bytesToString(bodyBytes)
+            # print 'self.body:',self.body
+            o, n = self.update_body(urllib.unquote(self.body))
+            self.body = self.body.replace(o, n)
+            newMessage = self._helpers.buildHttpMessage(self.headers,
+                                                        self.body)
+            currentRequest.setRequest(newMessage)
 
     def Filter(self, white_action, key):
         return True if ([True for i in white_action if
@@ -133,7 +129,7 @@ class BurpExtender(IBurpExtender, IHttpListener, IContextMenuFactory):
         except Exception as e:
             return e
 
-    def processHttpMessage(self, toolFlag, messageIsRequest, messageInfo):
+    def processHttpMessage(self, toolFlag, messageIsRequest, messageInfo, x):
         if toolFlag == 64 or toolFlag == 16 or toolFlag == 32:
             if not messageIsRequest:
                 response = messageInfo.getResponse()
@@ -142,12 +138,18 @@ class BurpExtender(IBurpExtender, IHttpListener, IContextMenuFactory):
                 headers = analyzedResponse.getHeaders()
                 body = response[analyzedResponse.getBodyOffset():]
                 body_string = body.tostring()
-                text = body_string.find('<script>')
+                text = body_string.find(x)
                 if text:
-                    new_body_string = body_string.replace(
-                        '<script>', '--' + '<script> allowed' + '--')
+                    new_body_string = body_string.replace('<!-- Your ' + x +
+                        ' payload allowed -->')
                     new_body = self._helpers.bytesToString(new_body_string)
                     # print new_body_string
                     messageInfo.setResponse(
                         self._helpers.buildHttpMessage(headers, new_body)
                     )
+
+
+try:
+    FixBurpExceptions()
+except:
+    pass
