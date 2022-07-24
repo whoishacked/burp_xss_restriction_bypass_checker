@@ -1,4 +1,4 @@
-# Simple XSS filter bypass
+# Simple XSS filter bypass Burp Suite extension
 ## Description
 Extension for PortSwigger Burp Suite which check and bypass XSS filters.
 
