@@ -26,6 +26,18 @@ except ImportError:
   pass
 
 
+PAYLOADS = [
+    '<script>alert(1)</script>',
+    '<img src=x onerror=alert(1) />',
+    '<svg onload=alert(\'XSS\')>',
+    '<script>alert(1)</script>',
+    '<img src=x onerror=alert(1) />',
+    '<svg onload=alert(\'XSS\')>'
+]
+
+PAYLOAD_TAG = '{XSS}'
+
+
 class BurpExtender(IBurpExtender, IHttpListener, IContextMenuFactory):
 
     def registerExtenderCallbacks(self, callbacks):
@@ -41,14 +53,7 @@ class BurpExtender(IBurpExtender, IHttpListener, IContextMenuFactory):
         self.menus.append(self.mainMenu)
         self.invocation = invocation
 
-        menuItem = [
-            '<script>alert(1)</script>',
-            '<img src=x onerror=alert(1) />',
-            '<svg onload=alert(\'XSS\')>',
-            '<script>alert(1)</script>',
-            '<img src=x onerror=alert(1) />',
-            '<svg onload=alert(\'XSS\')>'
-        ]
+        menuItem = PAYLOADS
         for payload in menuItem:
             menu = JMenuItem(payload, None,
                              actionPerformed=lambda
@@ -58,7 +63,7 @@ class BurpExtender(IBurpExtender, IHttpListener, IContextMenuFactory):
         return self.menus if self.menus else None
 
     def requestModify(self, x):
-        self.payload = x.getSource().text
+        self.payload = PAYLOAD_TAG+x.getSource().text+PAYLOAD_TAG
         currentRequest = self.invocation.getSelectedMessages()[0]
         requestInfo = self._helpers.analyzeRequest(currentRequest)
         self.headers = list(requestInfo.getHeaders())
@@ -87,7 +92,6 @@ class BurpExtender(IBurpExtender, IHttpListener, IContextMenuFactory):
             bodyBytes = currentRequest.getRequest()[
                         requestInfo.getBodyOffset():]
             self.body = self._helpers.bytesToString(bodyBytes)
-            # print 'self.body:',self.body
             o, n = self.update_body(urllib.unquote(self.body))
             self.body = self.body.replace(o, n)
             newMessage = self._helpers.buildHttpMessage(self.headers,
@@ -129,21 +133,37 @@ class BurpExtender(IBurpExtender, IHttpListener, IContextMenuFactory):
         except Exception as e:
             return e
 
-    def processHttpMessage(self, toolFlag, messageIsRequest, messageInfo, x):
+    def processHttpMessage(self, toolFlag, messageIsRequest, messageInfo):
         if toolFlag == 64 or toolFlag == 16 or toolFlag == 32:
+            if messageIsRequest:
+                request = messageInfo.getRequest()
+                analyzedRequest = self._helpers.analyzeRequest(
+                    request)
+                headers = analyzedRequest.getHeaders()
+                body = request[analyzedRequest.getBodyOffset():]
+                body_string = body.tostring()
+                self.payload = re.search(r'{XSS}[^{]+{XSS}', body_string)
+                if self.payload:
+                    new_body_string = body_string.replace(PAYLOAD_TAG, '')
+                    new_body = self._helpers.bytesToString(new_body_string)
+                    self.payload = self.payload.group(0).replace(PAYLOAD_TAG, '')
+                    messageInfo.setRequest(
+                        self._helpers.buildHttpMessage(headers, new_body)
+                    )
             if not messageIsRequest:
                 response = messageInfo.getResponse()
                 analyzedResponse = self._helpers.analyzeResponse(
-                    response)  # returns IResponseInfo
+                    response)
                 headers = analyzedResponse.getHeaders()
                 body = response[analyzedResponse.getBodyOffset():]
                 body_string = body.tostring()
-                text = body_string.find(x)
-                if text:
-                    new_body_string = body_string.replace('<!-- Your ' + x +
-                        ' payload allowed -->')
+                text = body_string.find(self.payload)
+                if text != -1:
+                    new_body_string = body_string.replace(
+                        self.payload,
+                        '<!-- Your payload works here >>> -->' + self.payload
+                    )
                     new_body = self._helpers.bytesToString(new_body_string)
-                    # print new_body_string
                     messageInfo.setResponse(
                         self._helpers.buildHttpMessage(headers, new_body)
                     )
