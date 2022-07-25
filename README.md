@@ -15,7 +15,7 @@ git clone whoishacked/burp_xss_filter_bypass_module
 4. Open Burp Suite Extender->Extensions tab and add the `xss_filter_bypass.py` extension.
 
 5. This extension uses [Burp Exceptions](https://github.com/securityMB/burp-exceptions/)
-for throwing exceptions in Python. ou also need to install it using [manual](https://github.com/securityMB/burp-exceptions/blob/master/exceptions_fix.py).
+for throwing exceptions in Python. You also need to install it using [manual](https://github.com/securityMB/burp-exceptions/blob/master/exceptions_fix.py).
 
 ## Usage
 
