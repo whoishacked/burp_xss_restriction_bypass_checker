@@ -207,7 +207,7 @@ class BurpExtender(IBurpExtender, IHttpListener, IContextMenuFactory):
                 if text != -1:
                     new_body_string = body_string.replace(
                         self.payload,
-                        '<!-- Your payload works here >>> -->' + self.payload
+                        '<!-- '+PAYLOAD_TAG+' -->'+self.payload
                     )
                     new_body = self._helpers.bytesToString(new_body_string)
                     messageInfo.setResponse(
