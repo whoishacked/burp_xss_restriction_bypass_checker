@@ -22,8 +22,8 @@ https://github.com/securityMB/burp-exceptions/blob/master/exceptions_fix.py.
 
 You can use payloads in Repeater. Just right-click, select payload
 in Extensions->XSS Filter Bypass, send request and check response. Also, you can
-use any payloads, just use {XSS}, for ex.: {XSS}my_payload{XSS}. If payload works -
-you will see the message: `<!-- {XSS} -->` ({XSS} - default payload tag). 
+paste any payload inside tag {XSS}, for ex.: {XSS}this_is_my_payload{XSS}. 
+If payload works - you will see the message: `<!-- {XSS} -->`. 
 
 ## Technologies
 - Python
