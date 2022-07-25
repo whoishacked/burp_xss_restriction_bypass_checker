@@ -21,7 +21,7 @@ for throwing exceptions in Python. You also need to install it using [manual](ht
 
 You can use payloads in Repeater. Just right-click, select payload
 in Extensions->XSS Filter Bypass, send request and check response. Also, you can
-insert any payload in the `{XSS}` tag, for ex.: `{XSS}this_is_my_payload{XSS}`. 
+insert any payload in the `{XSS}` tag, for example: `{XSS}this_is_my_payload{XSS}`. 
 If payload works - you will see the message in the response window: `<!-- {XSS} -->`. 
 
 ## Technologies
