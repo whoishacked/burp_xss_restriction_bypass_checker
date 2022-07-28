@@ -68,13 +68,13 @@ class BurpExtender(IBurpExtender, IHttpListener, IContextMenuFactory):
         self._callbacks.registerContextMenuFactory(self)
 
     def createMenuItems(self, invocation):
-        """Menu items creation and send payload in request window."""
+        """Menu items creation and sending payload in request window."""
         self.menus = []
         self.main_menu = JMenu("XSS Filter Bypass")
         self.menus.append(self.main_menu)
         self.invocation = invocation
         menu_items = PAYLOADS
-        # Parse checked payload
+        # Parse selected payload
         for payload in menu_items:
             menu = JMenuItem(payload, None,
                              actionPerformed=lambda x: self.requestModify(x))
