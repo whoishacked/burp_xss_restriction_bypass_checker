@@ -5,7 +5,7 @@ Extension for PortSwigger Burp Suite which check and bypass XSS filters.
 ## Installation
 1. Clone the repository:
 ```
-git clone whoishacked/burp_xss_filter_bypass_module
+git clone https://github.com/whoishacked/burp_xss_restriction_bypass_checker.git
 ```
 
 2. Download [Jython](https://www.jython.org/)
