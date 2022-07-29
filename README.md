@@ -1,6 +1,6 @@
 # XSS Restriction bypass checker
 ## Description
-Extension for PortSwigger Burp Suite which check and bypass XSS filters.
+Extension for PortSwigger Burp Suite which check and bypass XSS filters. This project was a part of [Digital Security](https://github.com/DSecurity)'s Penetration Testing department internship ["Summer of Hack 2022"](https://dsec.ru/about/vacancies/#internship).
 
 ## Installation
 1. Clone the repository:
